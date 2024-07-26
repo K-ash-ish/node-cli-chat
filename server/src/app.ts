@@ -4,6 +4,10 @@ import { parse } from "url";
 import { Data, WebSocketServer, WebSocket } from "ws";
 import { client } from "./types/client";
 import { createPasswordHash, verifyHash } from "./utils/hash";
+import * as db from "./dbConfig/dbConnection";
+import dotenv from "dotenv";
+dotenv.config();
+
 //TODO: convert http -> https
 
 const server = http.createServer((req, res) => {
@@ -12,6 +16,8 @@ const server = http.createServer((req, res) => {
     req.on("data", async (body) => {
       const { username, password } = JSON.parse(body.toString());
       const passwordHash = await createPasswordHash(password);
+      const result = await db.query("SELECT NOW()", []);
+      console.log("db result: ", result.rows);
     });
 
     res.end(JSON.stringify({ message: "server responce" }));

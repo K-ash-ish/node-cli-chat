@@ -1,7 +1,18 @@
 {
+  "scripts": {
+    "dev": "nodemon -r dotenv/config --experimental-json-modules dist/app.js"
+  },
   "dependencies": {
     "@types/node": "^20.14.11",
+    "@types/pg": "^8.11.6",
     "@types/ws": "^8.5.11",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "nodemon": "^3.1.4",
+    "pg": "^8.12.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2"
   }
 }
