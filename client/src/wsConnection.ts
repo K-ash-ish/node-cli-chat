@@ -1,25 +1,35 @@
-import { Data, WebSocket } from "ws";
-import { createToken } from "./utils/token";
+import { WebSocket } from "ws";
+import { Message } from "./types/message";
 
-const token = createToken("someValue");
-const ws = new WebSocket(`ws://localhost:3000/?token=${token}`);
+export class WSConnection {
+  private readonly ws: WebSocket;
+  private readonly token: string;
+  constructor(token: string) {
+    this.token = token;
+    this.ws = new WebSocket(`ws://localhost:3000/?token=${this.token}`);
+  }
 
-console.log(token);
-ws.on("open", function open() {
-  console.log("message: ");
-  //   rl.on("line", (input: string) => {
-  //     //change it to current ws user session
-  //     const targetToken = createToken("");
-  //     const message: Message = {
-  //       message: input,
-  //       from: token,
-  //       to: targetToken,
-  //     };
-
-  // ws.send(Buffer.from(JSON.stringify(message)));
-});
-
-// recieved message
-ws.on("message", function message(data: Data) {
-  console.log("Client: ", data.toString());
-});
+  connect(): Promise<WebSocket> {
+    return new Promise((resolve, reject) => {
+      this.ws.on("open", () => {
+        console.log("Websocket connected");
+        resolve(this.ws);
+      });
+      this.ws.on("error", () => {
+        console.error();
+        reject(new Error("Something went wrong!"));
+      });
+    });
+  }
+  subscribeToMessage(): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      this.ws.on("message", function message(data: Message) {
+        const message = JSON.parse(data.toString());
+        resolve(message);
+      });
+    });
+  }
+  sendMessage(message: Message) {
+    this.ws.send(Buffer.from(JSON.stringify(message)));
+  }
+}
