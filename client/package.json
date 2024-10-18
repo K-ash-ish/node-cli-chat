@@ -1,7 +1,14 @@
 {
+  "scripts": {
+    "build": "esbuild dist/app.js --bundle --platform=node --outfile=out.js"
+  },
   "dependencies": {
     "@types/node": "^20.14.11",
     "@types/ws": "^8.5.11",
+    "keytar": "^7.9.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.23.0"
   }
 }

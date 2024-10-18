@@ -1,4 +1,4 @@
-import { WebSocket } from "ws";
+import { Data, WebSocket } from "ws";
 import { Message } from "./types/message";
 
 export class WSConnection {
@@ -23,9 +23,10 @@ export class WSConnection {
   }
   subscribeToMessage(): Promise<Message> {
     return new Promise((resolve, reject) => {
-      this.ws.on("message", function message(data: Message) {
-        const message = JSON.parse(data.toString());
-        resolve(message);
+      this.ws.on("message", function message(data: Data) {
+        const { from, message } = JSON.parse(data.toString());
+        console.log(`${from}: ${message}`);
+        // resolve(data);
       });
     });
   }

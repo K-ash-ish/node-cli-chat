@@ -1,57 +1,69 @@
 import http, { IncomingMessage } from "http";
 import { Duplex } from "stream";
 import { parse } from "url";
-import { Data, WebSocketServer, WebSocket } from "ws";
-import { client } from "./types/client";
-import { createPasswordHash, verifyHash } from "./utils/hash";
-import * as db from "./dbConfig/dbConnection";
+import { WebSocketServer, WebSocket, Data } from "ws";
+import { createPasswordHash } from "./utils/hash";
 import dotenv from "dotenv";
+import { ApiResponse } from "./utils/ApiResponse";
+import { Message } from "./types/message";
+import { signJWT, verifyJWT } from "./utils/verifyJwt";
 dotenv.config();
 
 //TODO: convert http -> https
+const CLIENTS: Map<string, WebSocket> = new Map();
 
 const server = http.createServer((req, res) => {
   if (req.url === "/login" && req.method === "POST") {
+    let data, token;
     // Listen for data events to get the request body
     req.on("data", async (body) => {
       const { username, password } = JSON.parse(body.toString());
       const passwordHash = await createPasswordHash(password);
-      const result = await db.query("SELECT NOW()", []);
-      console.log("db result: ", result.rows);
+      data = {
+        id: Math.floor(Math.random() * 100).toString(),
+        username,
+      };
+      token = signJWT(data);
+      res.end(JSON.stringify(new ApiResponse(200, "Login success", token)));
     });
-
-    res.end(JSON.stringify({ message: "server responce" }));
+  }
+  if (req.url === "/list-users" && req.method === "GET") {
+    const users = Array.from(CLIENTS.keys()).map((name) => {
+      return name;
+    });
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+      JSON.stringify(new ApiResponse(100, "Current online users", users))
+    );
   }
 });
 
 const wss = new WebSocketServer({ noServer: true });
 
-const CLIENTS: client[] = [];
-
 //
 wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   const {
     query: { token },
-  } = parse(req.url || "", true);
+  } = parse(req.url ?? "", true);
+  const { username } = verifyJWT(token as string);
+  CLIENTS.set(username, ws);
 
-  console.log("TOKEN: ", token);
-  const client: client = {
-    ws,
-    token: token as string,
-  };
-  CLIENTS.push(client);
-  console.log(CLIENTS);
   //received message
   ws.on("message", function message(data: Data) {
-    console.log(data.toString());
-    const receivedData = JSON.parse(data.toString());
-    const client = CLIENTS.filter((client) => client.token === receivedData.to);
-    console.log("CLIENT: ", client);
-    client[0]?.ws?.send(receivedData.message);
+    const { to } = JSON.parse(data.toString());
+    const recipientWs = CLIENTS.get(to);
+    console.log(Array.from(CLIENTS.keys()));
 
-    // wss.clients.forEach(function each(client) {
-    //   console.log(client);
-    // });
+    recipientWs?.send(data);
+  });
+
+  ws.on("close", () => {
+    console.log(wss.clients.size);
+    ws.close();
+    console.log("Connection closed");
+    wss.clients.forEach(function each(client) {
+      console.log("COnnection: ", client.readyState);
+    });
   });
 });
 

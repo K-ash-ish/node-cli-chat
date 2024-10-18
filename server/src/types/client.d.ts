@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 
-export type client = {
+export type ClientInfo = {
   ws: WebSocket;
-  token: string;
+  username: string;
 };
