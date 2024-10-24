@@ -12,6 +12,19 @@ dotenv.config();
 const CLIENTS: Map<string, WebSocket> = new Map();
 
 const server = http.createServer((req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Handle OPTIONS requests for CORS
+  if (req.method === "OPTIONS") {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
+  // Set default content type
+  res.setHeader("Content-Type", "application/json");
   if (req.url === "/login" && req.method === "POST") {
     let data, token;
     // Listen for data events to get the request body
