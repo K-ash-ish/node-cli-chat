@@ -90,6 +90,6 @@ server.on(
   }
 );
 
-server.listen(8000, () => {
+server.listen(process.env.PORT ?? 3000, () => {
   console.log("server started on PORT ", 8000);
 });
