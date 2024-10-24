@@ -90,4 +90,6 @@ server.on(
   }
 );
 
-server.listen(3000);
+server.listen(8000, () => {
+  console.log("server started on PORT ", 8000);
+});
