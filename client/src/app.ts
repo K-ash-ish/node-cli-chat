@@ -1,112 +1,71 @@
-import readline from "readline";
-import { createToken } from "./utils/token";
-import { WSConnection } from "./wsConnection";
+import { WSConnection } from "./WSConnection";
+import { promptHandler } from "./promptHandler";
+import { auth } from "./auth";
+import { trimPrompt } from "./utils/trimPrompt";
+import { commandHandler } from "./commandHandler";
+import { UserSession } from "./UserSession";
 
-let CURRENT_USER: string;
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: ">",
-});
-function promptHandler(query: string): Promise<string> {
-  return new Promise(
-    (resolve: (value: string | PromiseLike<string>) => void) => {
-      rl.question(query, function prompt(value: string) {
-        resolve(value);
-      });
-    }
-  );
-}
-async function auth(type: string): Promise<string> {
-  let username: string, password: string, confirmation: string;
-  username = await promptHandler("username: ");
-  password = await promptHandler("password: ");
-  const authType = type === "login" ? "login" : "signup";
-  const response = await fetch(`http://localhost:3000/${authType}`, {
-    method: "POST",
-    body: JSON.stringify({ username, password }),
-  })
-    .then((res) => res.json())
-    .then((res) => res);
-  if (!response.success) {
-    throw new Error("Login failed");
-  }
-  CURRENT_USER = username;
-  return response.data;
-}
-async function getUsers(token: string) {
+export async function getUsers() {
   const users = await fetch(`http://localhost:3000/list-users`, {
     method: "GET",
   })
     .then((res) => res.json())
     .then((res) => res.data);
-  console.log(users);
-  // users.foreach((user: string) => {
-  //   console.log(`• ${user}`);
-  // });
-}
-async function sendMessageToUser(
-  client: WSConnection,
-  message: string,
-  CURRENT_USER: string,
-  userPrompt: string
-) {
-  client.sendMessage({
-    from: CURRENT_USER,
-    to: userPrompt,
-    message,
+  users.forEach((user: string) => {
+    console.log(`• ${user} \n`);
   });
 }
 
-async function chatWithUser(client: WSConnection) {
+export async function chatWithUser(client: WSConnection | null) {
   const userPrompt = await promptHandler("Type username (/back to exit): ");
+  const user = UserSession.getInstance().currentUser;
   let isChatting = true;
   if (trimPrompt(userPrompt) === "back") {
     isChatting = false;
-    // commandHandler();
+    console.log(`\n back \n`);
+    commandHandler();
     return;
   }
   while (isChatting) {
-    const message = await promptHandler(`${CURRENT_USER}: `);
-    sendMessageToUser(client, message, CURRENT_USER, userPrompt);
+    const message = await promptHandler(`${user}: `);
+    if (trimPrompt(message) === "back") {
+      isChatting = false;
+      console.log(`\n back \n`);
+      commandHandler();
+      return;
+    }
+    if (client)
+      client.sendMessage({
+        from: user,
+        to: userPrompt,
+        message,
+      });
   }
 }
-function commandHandler() {
-  console.log("/list_users /chatrooms /createroom /back /chat");
-}
-function trimPrompt(prompt: string) {
-  return prompt.trim().slice(1);
+
+export async function disconnectClient() {
+  const user = UserSession.getInstance().currentUser;
+  const res = await fetch(`http://localhost:3000/disconnect-client`, {
+    method: "POST",
+    body: JSON.stringify({ username: user }),
+  })
+    .then((res) => res.json())
+    .then((res) => res);
+  if (res.success) {
+    console.log("\n" + res.message);
+    console.log("BYE BYE!!");
+    process.exit(0);
+  }
 }
 async function app() {
-  let command;
   const token = await auth("login");
   if (token) {
     console.log("Login successfull");
+    const user = UserSession.getInstance();
+    user.connection = new WSConnection(token);
+    user.connection.subscribeToMessage();
     commandHandler();
-    const currentUser = new WSConnection(token);
-    const ws = await currentUser.connect();
-
-    currentUser.subscribeToMessage();
-    while (true) {
-      command = await promptHandler("command: ");
-      command = trimPrompt(command);
-
-      switch (command) {
-        case "list_users":
-          getUsers(token);
-          break;
-        case "exit":
-          ws.close();
-          break;
-        case "chat":
-          chatWithUser(currentUser);
-          break;
-        default:
-          break;
-      }
-    }
   }
 }
-
+process.once("SIGINT", disconnectClient);
 app();

@@ -25,7 +25,7 @@ export class WSConnection {
     return new Promise((resolve, reject) => {
       this.ws.on("message", function message(data: Data) {
         const { from, message } = JSON.parse(data.toString());
-        console.log(`${from}: ${message}`);
+        console.log(`${from}: ${message} \n`);
         // resolve(data);
       });
     });
