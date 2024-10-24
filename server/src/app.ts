@@ -1,5 +1,4 @@
 import http, { IncomingMessage } from "http";
-import https from "https";
 import { Duplex } from "stream";
 import { parse } from "url";
 import { WebSocketServer, WebSocket, Data } from "ws";
@@ -12,20 +11,7 @@ dotenv.config();
 //TODO: convert http -> https
 const CLIENTS: Map<string, WebSocket> = new Map();
 
-const server = https.createServer((req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  // Handle OPTIONS requests for CORS
-  if (req.method === "OPTIONS") {
-    res.writeHead(200);
-    res.end();
-    return;
-  }
-
-  // Set default content type
-  res.setHeader("Content-Type", "application/json");
+const server = http.createServer((req, res) => {
   if (req.url === "/login" && req.method === "POST") {
     let data, token;
     // Listen for data events to get the request body
@@ -104,6 +90,7 @@ server.on(
   }
 );
 
-server.listen(process.env.PORT ?? 3000, () => {
-  console.log("server started on PORT ", 8000);
+// server.listen(process.env.PORT ?? 8000, process.argv[2]);
+server.listen(3000, "0.0.0.0", () => {
+  console.log("Server started at port : ", process.env.PORT, 3000);
 });
