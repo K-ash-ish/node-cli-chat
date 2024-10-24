@@ -12,6 +12,8 @@ dotenv.config();
 const CLIENTS: Map<string, WebSocket> = new Map();
 
 const server = http.createServer((req, res) => {
+  res.setHeader("Content-Type", "application/json");
+
   if (req.url === "/" && req.method === "GET") {
     res.end("HELLO WORLD");
   }
