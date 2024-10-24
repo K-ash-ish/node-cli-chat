@@ -5,7 +5,6 @@ import { WebSocketServer, WebSocket, Data } from "ws";
 import { createPasswordHash } from "./utils/hash";
 import dotenv from "dotenv";
 import { ApiResponse } from "./utils/ApiResponse";
-import { Message } from "./types/message";
 import { signJWT, verifyJWT } from "./utils/verifyJwt";
 dotenv.config();
 
@@ -31,10 +30,28 @@ const server = http.createServer((req, res) => {
     const users = Array.from(CLIENTS.keys()).map((name) => {
       return name;
     });
+
     res.setHeader("Content-Type", "application/json");
     res.end(
       JSON.stringify(new ApiResponse(100, "Current online users", users))
     );
+  }
+  if (req.url === "/disconnect-client" && req.method === "POST") {
+    req.on("data", async (body) => {
+      const { username } = JSON.parse(body.toString());
+      const client = CLIENTS.get(username);
+      CLIENTS.delete(username);
+      client?.close();
+      console.log(
+        `Remaining Clients: ${Array.from(CLIENTS.keys())} ${CLIENTS.size}`
+      );
+      if (client?.CLOSED) {
+        console.log("User diconnected: ", username);
+        res.end(
+          JSON.stringify(new ApiResponse(100, "Connection closed successfully"))
+        );
+      }
+    });
   }
 });
 
@@ -52,18 +69,14 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   ws.on("message", function message(data: Data) {
     const { to } = JSON.parse(data.toString());
     const recipientWs = CLIENTS.get(to);
-    console.log(Array.from(CLIENTS.keys()));
+    console.log("ONMESSAGE: ", Array.from(CLIENTS.keys()));
 
     recipientWs?.send(data);
   });
 
   ws.on("close", () => {
-    console.log(wss.clients.size);
     ws.close();
-    console.log("Connection closed");
-    wss.clients.forEach(function each(client) {
-      console.log("COnnection: ", client.readyState);
-    });
+    console.log("Connection closed: ", CLIENTS.size);
   });
 });
 
