@@ -1,4 +1,5 @@
 import http, { IncomingMessage } from "http";
+import https from "https";
 import { Duplex } from "stream";
 import { parse } from "url";
 import { WebSocketServer, WebSocket, Data } from "ws";
@@ -11,7 +12,7 @@ dotenv.config();
 //TODO: convert http -> https
 const CLIENTS: Map<string, WebSocket> = new Map();
 
-const server = http.createServer((req, res) => {
+const server = https.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
