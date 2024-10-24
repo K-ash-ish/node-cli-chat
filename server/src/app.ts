@@ -22,12 +22,15 @@ const server = http.createServer((req, res) => {
     // Listen for data events to get the request body
     req.on("data", async (body) => {
       const { username, password } = JSON.parse(body.toString());
+      console.log(JSON.parse(body.toString()));
       const passwordHash = await createPasswordHash(password);
       data = {
         id: Math.floor(Math.random() * 100).toString(),
         username,
       };
+      console.log(data);
       token = signJWT(data);
+      console.log(token);
       res.end(JSON.stringify(new ApiResponse(200, "Login success", token)));
     });
   }
