@@ -12,6 +12,8 @@ dotenv.config();
 const CLIENTS: Map<string, WebSocket> = new Map();
 
 const server = http.createServer((req, res) => {
+  res.setHeader("Content-Type", "application/json");
+
   if (req.url === "/login" && req.method === "POST") {
     let data, token;
     // Listen for data events to get the request body
@@ -91,6 +93,7 @@ server.on(
 );
 
 // server.listen(process.env.PORT ?? 8000, process.argv[2]);
-server.listen(3000, "0.0.0.0", () => {
+const PORT = process.env.PORT ?? 3000;
+server.listen(0, "0.0.0.0", () => {
   console.log("Server started at port : ", process.env.PORT, 3000);
 });
