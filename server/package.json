@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "dev": "nodemon -r dotenv/config --experimental-json-modules dist/app.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules dist/app.js",
+    "start": "ts-node-dev app.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@types/node": "^20.14.11",
