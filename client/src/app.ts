@@ -1,12 +1,12 @@
-import { WSConnection } from "./WSConnection";
+import { WSConnection } from "./wsConnection";
 import { promptHandler } from "./promptHandler";
 import { auth } from "./auth";
 import { trimPrompt } from "./utils/trimPrompt";
 import { commandHandler } from "./commandHandler";
 import { UserSession } from "./UserSession";
-
+import { URL } from "./constant";
 export async function getUsers() {
-  const users = await fetch(`http://localhost:3000/list-users`, {
+  const users = await fetch(`${URL}list-users`, {
     method: "GET",
   })
     .then((res) => res.json())
@@ -45,7 +45,7 @@ export async function chatWithUser(client: WSConnection | null) {
 
 export async function disconnectClient() {
   const user = UserSession.getInstance().currentUser;
-  const res = await fetch(`http://localhost:3000/disconnect-client`, {
+  const res = await fetch(`${URL}disconnect-client`, {
     method: "POST",
     body: JSON.stringify({ username: user }),
   })
@@ -57,10 +57,25 @@ export async function disconnectClient() {
     process.exit(0);
   }
 }
+async function start(action: string) {
+  switch (trimPrompt(action)) {
+    case "signup":
+      return await auth("signup");
+    case "login":
+      return await auth("login");
+    case "exit":
+      process.exit(0);
+    default:
+      break;
+  }
+}
 async function app() {
-  const token = await auth("login");
+  console.log("Welcome to the server! \n");
+  console.log("/signup /login /exit \n");
+  const userAction = await promptHandler("Action: ");
+  const token = await start(userAction);
+
   if (token) {
-    console.log("Login successfull");
     const user = UserSession.getInstance();
     user.connection = new WSConnection(token);
     user.connection.subscribeToMessage();

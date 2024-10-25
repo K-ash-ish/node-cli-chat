@@ -1,12 +1,13 @@
 import { Data, WebSocket } from "ws";
 import { Message } from "./types/message";
+import { WS_URL } from "./constant";
 
 export class WSConnection {
   private readonly ws: WebSocket;
   private readonly token: string;
   constructor(token: string) {
     this.token = token;
-    this.ws = new WebSocket(`ws://localhost:3000/?token=${this.token}`);
+    this.ws = new WebSocket(`${WS_URL}?token=${this.token}`);
   }
 
   connect(): Promise<WebSocket> {

@@ -1,4 +1,4 @@
-import { WSConnection } from "./WSConnection";
+import { WSConnection } from "./wsConnection";
 
 export class UserSession {
   private static instance: UserSession;
