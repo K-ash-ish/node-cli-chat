@@ -13,25 +13,31 @@ const CLIENTS: Map<string, WebSocket> = new Map();
 
 const server = http.createServer((req, res) => {
   res.setHeader("Content-Type", "application/json");
-
-  if (req.url === "/" && req.method === "GET") {
-    res.end("HELLO WORLD");
+  if (req.url === "/signup" && req.method === "POST") {
+    let data, token;
+    req.on("data", async (body) => {
+      const { username, password } = JSON.parse(body.toString());
+      // hashpassword db call to check then store the username password
+      data = {
+        id: Math.floor(Math.random() * 100).toString(),
+        username,
+      };
+      token = signJWT(data);
+      res.end(JSON.stringify(new ApiResponse(200, "Signup Success ✅", token)));
+    });
   }
   if (req.url === "/login" && req.method === "POST") {
     let data, token;
     // Listen for data events to get the request body
     req.on("data", async (body) => {
       const { username, password } = JSON.parse(body.toString());
-      console.log(JSON.parse(body.toString()));
       const passwordHash = await createPasswordHash(password);
       data = {
         id: Math.floor(Math.random() * 100).toString(),
         username,
       };
-      console.log(data);
       token = signJWT(data);
-      console.log(token);
-      res.end(JSON.stringify(new ApiResponse(200, "Login success", token)));
+      res.end(JSON.stringify(new ApiResponse(200, "Login Success ✅", token)));
     });
   }
   if (req.url === "/list-users" && req.method === "GET") {
@@ -98,7 +104,6 @@ server.on(
   }
 );
 
-// server.listen(process.env.PORT ?? 8000, process.argv[2]);
 const port = process.env.PORT || 4000;
 server.listen(port, () => {
   console.log("Server started at port : ", port);
