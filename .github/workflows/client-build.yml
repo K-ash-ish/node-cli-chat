@@ -11,15 +11,7 @@ jobs:
   build-exe-file:
     strategy:
       matrix:
-        os: [
-            chat.exe
-            chat.exe
-            chat.exe
-            chat.exe
-            chat.exe
-            chat.exe
-            chat.exe
-            chat.exewindows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest]
 
     runs-on: ${{matrix.os}}
 
@@ -67,15 +59,13 @@ jobs:
         shell: powershell
         run: |
           node -e "require('fs').copyFileSync(process.execPath, 'chat.exe')"
-          signtool remove /s chat.exe
           npx postject chat.exe NODE_SEA_BLOB node-cli.blob `
            --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
-          signtool sign /fd SHA256 hello.exe
 
       - name: Uploading executable
         uses: actions/upload-artifact@v4
         with:
-          name: single-exe
+          name: single-exe-${{matrix.os}}
           path: |
-            chat
-            chat.exe
+            ${{ github.workspace }}/client/chat
+            ${{ github.workspace }}/client/chat.exe
