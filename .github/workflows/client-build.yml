@@ -37,9 +37,10 @@ jobs:
 
       - name: Creating exe file
         run: |
+          echo '{ "main": "out.js", "output": "node-cli.blob" }' > sea-config.json 
           node --experimental-sea-config sea-config.json
           cp $(command -v node) chat
-          npx posteject chat NODE_SEA_BLOB sea-prep.blob \
+          npx posteject chat NODE_SEA_BLOB node-cli.blob \
            --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
 
       - name: Uploading executable
