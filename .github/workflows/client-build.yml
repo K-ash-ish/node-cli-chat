@@ -49,5 +49,5 @@ jobs:
         with:
           name: single-exe
           path: |
-            chat
-            chat.exe
+            /chat
+            /chat.exe
