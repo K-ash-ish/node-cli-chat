@@ -71,7 +71,7 @@ async function start(action: string) {
 }
 async function app() {
   console.log("Welcome to the server! \n");
-  console.log("/signup /login /exit \n");
+  console.log("Actions available: /signup /login /exit \n");
   const userAction = await promptHandler("Action: ");
   const token = await start(userAction);
 
