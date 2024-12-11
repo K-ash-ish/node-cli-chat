@@ -1,0 +1,51 @@
+name: Build exe file
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "client/**"
+jobs:
+  build-exe-file:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest]
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Nodejs
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.12.2"
+          cache: "npm"
+          cache-dependency-path: "./client/package-lock.json"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build typescript
+        run: npm run build
+
+      - name: Build out.js file
+        run: npm run package
+
+      - name: Creating exe file
+        run: |
+          node --experimental-sea-config sea-config.json
+          cp $(command -v node) chat
+          npx posteject chat NODE_SEA_BLOB sea-prep.blob \
+           --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+
+      - name: Uploading executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: singe-exe
+          path: |
+            chat
+            chat.exe

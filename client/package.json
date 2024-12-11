@@ -1,6 +1,10 @@
 {
   "scripts": {
-    "build": "esbuild dist/app.js --bundle --platform=node --outfile=out.js"
+    "build": "tsc",
+    "package": "esbuild dist/app.js --bundle --platform=node --outfile=out.js",
+    "start": "nodemon dist/app.js",
+    "build-blob": "node --experimental-sea-config sea-config.json",
+    "build-exe": "node -e \"require('fs').copyFileSync(process.execPath, 'ch.exe')\""
   },
   "dependencies": {
     "@types/node": "^20.14.11",
@@ -9,6 +13,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "esbuild": "0.23.0"
+    "esbuild": "0.23.0",
+    "nodemon": "^3.1.7"
   }
 }
