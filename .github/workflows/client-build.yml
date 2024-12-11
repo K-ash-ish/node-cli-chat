@@ -9,10 +9,12 @@ on:
       - ".github/workflows/client-build.yml"
 jobs:
   build-exe-file:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, ubuntu-latest]
+
+    runs-on: ${{matrix.os}}
+
     defaults:
       run:
         working-directory: ./client
@@ -31,7 +33,9 @@ jobs:
         run: npm ci
 
       - name: Build typescript
-        run: npm run build
+        run: |
+          npm i typescript
+          npm run build
 
       - name: Build out.js file
         run: npm run package
@@ -40,14 +44,30 @@ jobs:
         run: |
           echo '{ "main": "out.js", "output": "node-cli.blob" }' > sea-config.json 
           node --experimental-sea-config sea-config.json
+
+      - name: Prepare Executable (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: ./client
+        run: |
           cp $(command -v node) chat
           npx postject chat NODE_SEA_BLOB node-cli.blob \
            --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+
+      - name: Prepare Executable (Windows)
+        if: matrix.os == 'windows-latest'
+        working-directory: ./client
+        shell: powershell
+        run: |
+          node -e "require('fs').copyFileSync(process.execPath, 'chat.exe')"
+          signtool remove /s chat.exe
+          npx postject chat.exe NODE_SEA_BLOB node-cli.blob \
+           --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+          signtool sign /fd SHA256 hello.exe
 
       - name: Uploading executable
         uses: actions/upload-artifact@v4
         with:
           name: single-exe
           path: |
-            /.chat
-            /.chat.exe
+            chat
+            chat.exe
